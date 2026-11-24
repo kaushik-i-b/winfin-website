@@ -14,6 +14,9 @@ const pages: { path: string; priority: number }[] = [
   { path: "/contact/", priority: 0.6 },
 ];
 
+// Generated once at build time (static export for GitHub Pages).
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return pages.map(({ path, priority }) => ({
     url: absoluteUrl(path),

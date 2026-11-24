@@ -11,13 +11,11 @@ export const site = {
 } as const;
 
 /**
- * Search engines may index the site only when ALLOW_INDEXING is "true" and,
- * on Vercel, only for the production environment. Everything else (local,
- * staging, preview deployments) is served with noindex.
+ * Search engines may index the site only when the build sets
+ * ALLOW_INDEXING=true (the GitHub Pages workflow does). Local and test
+ * builds get noindex on every page.
  */
-export const allowIndexing =
-  process.env.ALLOW_INDEXING === "true" &&
-  (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === "production");
+export const allowIndexing = process.env.ALLOW_INDEXING === "true";
 
 export const nav = [
   { href: "/saakshi/", label: "Saakshi" },

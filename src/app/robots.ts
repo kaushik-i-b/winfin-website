@@ -1,14 +1,17 @@
 import type { MetadataRoute } from "next";
 import { allowIndexing, site } from "@/lib/site";
 
+// Generated once at build time (static export for GitHub Pages).
+export const dynamic = "force-static";
+
 export default function robots(): MetadataRoute.Robots {
-  // Outside production the pages carry noindex (meta tag + X-Robots-Tag), so
-  // crawling stays open for crawlers to see it; no sitemap is advertised.
+  // Non-production builds put noindex on every page; crawling stays open so
+  // crawlers can see it, and no sitemap is advertised.
   if (!allowIndexing) {
     return { rules: { userAgent: "*", allow: "/" } };
   }
   return {
-    rules: { userAgent: "*", allow: "/", disallow: "/api/" },
+    rules: { userAgent: "*", allow: "/" },
     sitemap: `${site.url}/sitemap.xml`,
   };
 }

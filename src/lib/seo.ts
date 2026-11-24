@@ -17,7 +17,7 @@ type PageMeta = {
 };
 
 const defaultImage = {
-  path: "/opengraph-image/",
+  path: "/og/saakshi.png",
   alt: "Saakshi by Winfin Technologies: every recovery call, evidence your team can review.",
 };
 

@@ -17,47 +17,45 @@ npm run dev
 
 Open http://localhost:3000.
 
-Other scripts: `npm run build` (production build), `npm start` (serve the build), `npm run lint`.
+Other scripts: `npm run build` (static site in `out/`) and `npm run lint`. `npm start` does not apply to a static export; serve `out/` with any static file server instead.
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and fill in what you need.
+The site is a fully static export (`output: "export"`). `npm run build` writes it to `out/`, and it is hosted on **GitHub Pages**. Build-time settings:
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Public production URL without a trailing slash, defaults to `https://winfintechnologies.com`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. Set it only if the production domain changes. Requests on `www.winfintechnologies.com` are redirected to it. |
-| `ALLOW_INDEXING` | Set to `true` **only** on the production deployment. When unset, every page and file is served with `noindex` (meta tag and `X-Robots-Tag` header) and `robots.txt` lists no sitemap. On Vercel, preview deployments stay `noindex` even if this is set. |
-| `CONTACT_WEBHOOK_URL` | Option A for the contact form: any endpoint that accepts a JSON `POST` (Formspree, Make, Zapier, n8n, your own API). |
-| `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` | Option B: send form submissions as email via [Resend](https://resend.com). `CONTACT_FROM_EMAIL` must use a domain verified in Resend. |
+| `NEXT_PUBLIC_SITE_URL` | Production URL, defaults to `https://winfintechnologies.com`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. |
+| `ALLOW_INDEXING` | `true` only for the production build (the deploy workflow sets it). Without it every page is `noindex` and `robots.txt` lists no sitemap. |
+| `NEXT_PUBLIC_CONTACT_ENDPOINT` | Optional. A form-service endpoint that accepts a JSON `POST` from the browser and returns 2xx, e.g. a [Formspree](https://formspree.io) form URL. In GitHub, set it as the repository variable `CONTACT_ENDPOINT`. |
 
 ### Contact form behaviour
 
-- **Not configured** (neither option set): the form shows a notice and its button opens the visitor's email app with their message pre-filled to `support@oppuna.com`. No submissions are lost silently.
-- **Configured**: client and server validation, a loading state, a success confirmation, and an email fallback if delivery fails. A hidden honeypot field filters basic spam.
-- Webhook payload: `{ subject, name, email, organisation, topic, topicLabel, message, text, submittedAt }`.
+- **No endpoint set:** the form shows a notice and its button opens the visitor's email app with their message pre-filled to `support@oppuna.com`. No submissions are lost silently.
+- **Endpoint set:** client-side validation, a loading state, a success confirmation, and an email fallback if delivery fails. A hidden honeypot field filters basic spam. The JSON sent is `{ _subject, name, email, organisation, topic, message, submittedAt }`.
 
-The email buttons on the Contact page (general, software project, Saakshi pilot, licensing) are plain `mailto:` links with subject lines and work without any configuration.
+The email links on the Contact page (Saakshi pilot, software project, general) are plain `mailto:` links and need no setup.
 
-## Deploy
+## Deploy: GitHub Pages
 
-### Vercel (recommended)
+Every push to `main` runs `.github/workflows/deploy.yml`: lint, static build with production settings, then deploy to GitHub Pages. `public/CNAME` sets the custom domain to `winfintechnologies.com`.
 
-1. Push this folder to a Git repository.
-2. Import it at vercel.com/new. The framework is detected automatically.
-3. Add the environment variables above under Settings → Environment Variables.
-4. Add `winfintechnologies.com` and `www.winfintechnologies.com` as domains. Set `NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com` and `ALLOW_INDEXING=true` for the **Production** environment only, then redeploy.
-5. Recommended: in Vercel → Settings → Deployment Protection, protect preview deployments so staging is not publicly reachable at all.
+**One-time setup (needs the repository owner, and DNS access for the domain):**
 
-### Any Node host
+1. GitHub → repository **Settings → Pages**: set **Source** to **GitHub Actions**. Pages on a private repository needs a paid GitHub plan; on a free plan the repository must be public.
+2. In the same page, set **Custom domain** to `winfintechnologies.com` and, once DNS works, tick **Enforce HTTPS**.
+3. At your DNS provider for `winfintechnologies.com`:
+   - `A` records for the apex `@`: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - Optional `AAAA` records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`
+   - `CNAME` record: `www` → `kaushik-i-b.github.io`
 
-```bash
-npm ci
-npm run build
-NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com ALLOW_INDEXING=true npm run build
-NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com ALLOW_INDEXING=true npm start   # port 3000 (PORT to change)
-```
+   GitHub then redirects `www` to the apex and issues the HTTPS certificate. This can take up to 24 hours.
+4. Recommended: verify the domain under your GitHub account's **Settings → Pages → Verified domains**, so no one else can claim it on GitHub.
+5. Optional: add the repository variable `CONTACT_ENDPOINT` (**Settings → Secrets and variables → Actions → Variables**) and re-run the workflow to turn on online form delivery.
 
-The contact form uses a server route (`/api/contact`), so static-only hosting (`next export`) is not supported unless you remove the form and keep the `mailto:` links.
+GitHub Pages also redirects `/saakshi` to `/saakshi/` and serves `404.html` for unknown URLs. Old URLs `/products/` and `/home/` are static pages that redirect immediately and are `noindex`.
+
+To preview the static build locally: `npm run build && npx serve out` (or any static file server).
 
 ## SEO
 
@@ -77,12 +75,12 @@ Each page sets its title, description, canonical and social tags through `pageMe
 
 ### What is implemented
 
-- **URLs:** trailing slashes everywhere (`/saakshi` → 308 → `/saakshi/`). Self-referencing absolute canonicals on the production domain. `/products` → `/saakshi/`, `/home` and `/index.html` → `/`. On production, the `www`/apex twin of `NEXT_PUBLIC_SITE_URL` redirects (308) to the canonical host. Any other host serving the production build (for example `*.vercel.app`) gets `X-Robots-Tag: noindex` (`src/proxy.ts`).
+- **URLs:** trailing slashes everywhere; GitHub Pages redirects `/saakshi` to `/saakshi/`. Self-referencing absolute canonicals on the production domain. `www` redirects to the apex domain (GitHub Pages custom-domain handling). `/products/` and `/home/` are noindex pages that redirect immediately to `/saakshi/` and `/`.
 - **Indexing:** see `ALLOW_INDEXING` above. `robots.txt` (`src/app/robots.ts`) and `sitemap.xml` (`src/app/sitemap.ts`) use the configured domain. Update `lastModified` in `sitemap.ts` when content changes meaningfully.
 - **404:** unknown URLs return HTTP 404 with a `noindex` page linking to the main sections.
-- **Social sharing:** Open Graph and Twitter tags on every page. There is a 1200×630 Saakshi image (`src/app/opengraph-image.tsx`) and a separate Oppuna image (`src/app/oppuna/opengraph-image.tsx`).
+- **Social sharing:** Open Graph and Twitter tags on every page, with static 1200×630 images in `public/og/` (`saakshi.png`, `oppuna.png`).
 - **Structured data (JSON-LD):**
-  - `Organization` and `WebSite` on every page (`layout.tsx`), with the logo at `/logo.png`.
+  - `Organization` and `WebSite` on every page (`layout.tsx`), with the logo at `public/logo.png`.
   - `BreadcrumbList` on internal pages, matching the visible breadcrumbs.
   - `SoftwareApplication` for Oppuna.
   - `WebPage` for Saakshi.
@@ -94,11 +92,10 @@ Each page sets its title, description, canonical and social tags through `pageMe
 ### Checking a deployment
 
 ```bash
-curl -sI https://winfintechnologies.com/saakshi | grep -i -E "^HTTP|location"     # 308 to /saakshi/
+curl -sI https://winfintechnologies.com/saakshi | grep -i -E "^HTTP|location"     # 301 to /saakshi/
 curl -s https://winfintechnologies.com/saakshi/ | grep -o '<link rel="canonical"[^>]*>'
 curl -s https://winfintechnologies.com/robots.txt
 curl -s https://winfintechnologies.com/sitemap.xml
-curl -sI https://your-preview-url/ | grep -i x-robots-tag                  # noindex on previews
 ```
 
 Then validate a few URLs in Google's [Rich Results Test](https://search.google.com/test/rich-results) and the [Schema Markup Validator](https://validator.schema.org/), and run PageSpeed Insights on the homepage and `/saakshi/` for mobile performance.
@@ -114,7 +111,7 @@ These steps need the **website owner's Google account and access to the domain's
 5. Use **URL inspection** on `/` and `/saakshi/`, check that the canonical Google selects matches yours, and click **Request indexing**.
 6. Optional: verify the same domain in [Bing Webmaster Tools](https://www.bing.com/webmasters), which can import from Search Console, and submit the sitemap there.
 
-Make sure `ALLOW_INDEXING=true` is set on production **before** requesting indexing. Otherwise Google will see `noindex`.
+Request indexing only after the GitHub Pages deploy is live on `https://winfintechnologies.com`. The workflow sets `ALLOW_INDEXING=true`.
 
 ## Project structure
 
@@ -126,14 +123,13 @@ src/
                              enquiry, Oppuna, company
     saakshi/page.tsx         Saakshi product page, demo, human review, FAQ
     saakshi/pilot/page.tsx   Pilot scope, stages, pilot FAQ, enquiry
-    oppuna/page.tsx          Oppuna page, FAQ, own social image
+    oppuna/page.tsx          Oppuna page and FAQ
     services/page.tsx        Services and engagement models
     about/page.tsx           Company
     contact/page.tsx         Email routes + contact form
-    api/contact/route.ts     Configurable form backend
-    opengraph-image.tsx      Generated social image
-    sitemap.ts, robots.ts, icon.svg, logo.png/, not-found.tsx
-  proxy.ts                   noindex for non-production hosts, www/apex redirect
+    products/, home/         Redirect pages for old URLs
+    sitemap.ts, robots.ts, icon.svg, not-found.tsx
+  public/                    CNAME, .nojekyll, og/ social images, logo.png
   components/
     site-header.tsx          Responsive, keyboard-accessible navigation
     site-footer.tsx

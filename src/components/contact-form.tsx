@@ -12,6 +12,15 @@ import {
 } from "@/lib/contact";
 import { mailto } from "@/lib/site";
 
+/**
+ * Form submissions go straight from the browser to a form service (the site is
+ * static, so there is no server of its own). Set NEXT_PUBLIC_CONTACT_ENDPOINT
+ * at build time to any endpoint that accepts a JSON POST and returns 2xx on
+ * success, e.g. a Formspree form URL. Without it, the form opens the
+ * visitor's email app instead.
+ */
+const ENDPOINT = process.env.NEXT_PUBLIC_CONTACT_ENDPOINT ?? "";
+
 type Status =
   | { kind: "idle" }
   | { kind: "submitting" }
@@ -42,7 +51,7 @@ export function ContactForm() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [configured, setConfigured] = useState<boolean | null>(null);
+  const configured = ENDPOINT !== "";
 
   // Keep topic in sync when the URL's ?topic= changes while on the page.
   const [lastParam, setLastParam] = useState(paramTopic);
@@ -54,17 +63,6 @@ export function ContactForm() {
   const summaryRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
   const id = useId();
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/contact/", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { configured: false }))
-      .then((d: { configured?: boolean }) => !cancelled && setConfigured(Boolean(d.configured)))
-      .catch(() => !cancelled && setConfigured(false));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (status.kind === "success") successRef.current?.focus();
@@ -104,37 +102,38 @@ export function ContactForm() {
       return;
     }
 
+    // Honeypot filled in: almost certainly a bot. Pretend it worked.
+    if (values.website) {
+      setStatus({ kind: "success" });
+      return;
+    }
+    if (!configured) {
+      setStatus({ kind: "not_configured" });
+      return;
+    }
+
     setStatus({ kind: "submitting" });
     try {
-      const res = await fetch("/api/contact/", {
+      const res = await fetch(ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: subjects[data.topic],
+          name: data.name,
+          email: data.email,
+          organisation: data.organisation,
+          topic: topics[data.topic],
+          message: data.message,
+          submittedAt: new Date().toISOString(),
+        }),
       });
-      const json = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        code?: string;
-        message?: string;
-        errors?: FieldErrors;
-      };
-      if (res.ok && json.ok) {
+      if (res.ok) {
         setStatus({ kind: "success" });
         return;
       }
-      if (json.code === "validation" && json.errors) {
-        setErrors(json.errors);
-        setStatus({ kind: "idle" });
-        requestAnimationFrame(() => summaryRef.current?.focus());
-        return;
-      }
-      if (json.code === "not_configured") {
-        setConfigured(false);
-        setStatus({ kind: "not_configured" });
-        return;
-      }
-      setStatus({ kind: "error", message: json.message ?? "Something went wrong." });
+      setStatus({ kind: "error", message: "Your message couldn’t be sent just now." });
     } catch {
-      setStatus({ kind: "error", message: "We couldn’t reach the server. Check your connection and try again." });
+      setStatus({ kind: "error", message: "We couldn’t reach the form service. Check your connection and try again." });
     }
   }
 
@@ -169,7 +168,7 @@ export function ContactForm() {
 
   const errorList = Object.entries(errors).filter(([, v]) => v) as [keyof FieldErrors, string][];
   const submitting = status.kind === "submitting";
-  const showUnavailable = configured === false || status.kind === "not_configured";
+  const showUnavailable = !configured || status.kind === "not_configured";
 
   return (
     <form noValidate onSubmit={onSubmit} aria-busy={submitting} className="space-y-6" aria-describedby={showUnavailable ? `${id}-unavailable` : undefined}>
@@ -323,13 +322,13 @@ export function ContactForm() {
         ) : (
           <button
             type="submit"
-            disabled={submitting || configured === null}
+            disabled={submitting}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent px-6 font-medium text-on-accent transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting && (
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" /></svg>
             )}
-            {submitting ? "Sending…" : configured === null ? "Checking…" : "Send message"}
+            {submitting ? "Sending…" : "Send message"}
           </button>
         )}
         <p className="text-sm text-subtle">

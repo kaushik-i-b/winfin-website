@@ -14,7 +14,7 @@ export const metadata = pageMetadata({
   title: "Oppuna: Offline AI Wellness Journal & Private Mood Tracker",
   description,
   path: "/oppuna/",
-  image: { path: "/oppuna/opengraph-image/", alt: "Oppuna: a private, offline AI wellness journal for Android." },
+  image: { path: "/og/oppuna.png", alt: "Oppuna: a private, offline AI wellness journal for Android." },
 });
 
 const oppunaFeatures = [

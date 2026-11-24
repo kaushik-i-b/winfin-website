@@ -1,20 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // One URL per page: /saakshi redirects to /saakshi/ (308).
+  // Static export for GitHub Pages: `npm run build` writes the site to out/.
+  output: "export",
+  // One URL per page (/saakshi/ rather than /saakshi). GitHub Pages also
+  // redirects /saakshi to /saakshi/.
   trailingSlash: true,
-  poweredByHeader: false,
-  async redirects() {
-    return [
-      // Old products page: Saakshi and Oppuna now have their own pages.
-      { source: "/products", destination: "/saakshi/", permanent: true },
-      { source: "/saakshi/pilot-enquiry", destination: "/saakshi/pilot/", permanent: true },
-      { source: "/index.html", destination: "/", permanent: true },
-      { source: "/home", destination: "/", permanent: true },
-    ];
-  },
-  cacheComponents: true,
-  partialPrefetching: true,
+  images: { unoptimized: true },
   turbopack: {
     root: process.cwd(),
     rules: {

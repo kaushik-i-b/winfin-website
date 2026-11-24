@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
  *   canonical host. Any other host (e.g. *.vercel.app) gets X-Robots-Tag: noindex.
  * - Indexing not allowed (local, staging, previews): every response gets noindex.
  */
-const canonical = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
+const canonical = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://winfintechnologies.com");
 const indexable =
   process.env.ALLOW_INDEXING === "true" &&
   (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === "production");

@@ -4,8 +4,8 @@ export const site = {
   tagline: "Saakshi — AI call review for lending and collections",
   description:
     "Winfin Technologies is an India-based AI and software company developing Saakshi, an AI call-review product for lenders, NBFCs and collection agencies, and Oppuna, a private on-device wellness companion.",
-  /** Production origin, without a trailing slash. Set NEXT_PUBLIC_SITE_URL. */
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, ""),
+  /** Production origin, without a trailing slash. NEXT_PUBLIC_SITE_URL overrides it. */
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://winfintechnologies.com").replace(/\/+$/, ""),
   email: "support@oppuna.com",
   location: "India",
 } as const;

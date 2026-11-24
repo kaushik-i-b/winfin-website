@@ -25,7 +25,7 @@ Copy `.env.example` to `.env.local` and fill in what you need.
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Public production URL without a trailing slash, e.g. `https://www.winfin.example`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. **Set this in every environment that builds the production site.** |
+| `NEXT_PUBLIC_SITE_URL` | Public production URL without a trailing slash, defaults to `https://winfintechnologies.com`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. Set it only if the production domain changes. Requests on `www.winfintechnologies.com` are redirected to it. |
 | `ALLOW_INDEXING` | Set to `true` **only** on the production deployment. When unset, every page and file is served with `noindex` (meta tag and `X-Robots-Tag` header) and `robots.txt` lists no sitemap. On Vercel, preview deployments stay `noindex` even if this is set. |
 | `CONTACT_WEBHOOK_URL` | Option A for the contact form: any endpoint that accepts a JSON `POST` (Formspree, Make, Zapier, n8n, your own API). |
 | `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` | Option B: send form submissions as email via [Resend](https://resend.com). `CONTACT_FROM_EMAIL` must use a domain verified in Resend. |
@@ -45,7 +45,7 @@ The email buttons on the Contact page (general, software project, Saakshi pilot,
 1. Push this folder to a Git repository.
 2. Import it at vercel.com/new. The framework is detected automatically.
 3. Add the environment variables above under Settings → Environment Variables.
-4. Add your custom domain. Set `NEXT_PUBLIC_SITE_URL` to it and `ALLOW_INDEXING=true` for the **Production** environment only, then redeploy.
+4. Add `winfintechnologies.com` and `www.winfintechnologies.com` as domains. Set `NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com` and `ALLOW_INDEXING=true` for the **Production** environment only, then redeploy.
 5. Recommended: in Vercel → Settings → Deployment Protection, protect preview deployments so staging is not publicly reachable at all.
 
 ### Any Node host
@@ -53,8 +53,8 @@ The email buttons on the Contact page (general, software project, Saakshi pilot,
 ```bash
 npm ci
 npm run build
-NEXT_PUBLIC_SITE_URL=https://your-domain ALLOW_INDEXING=true npm run build
-NEXT_PUBLIC_SITE_URL=https://your-domain ALLOW_INDEXING=true npm start   # port 3000 (PORT to change)
+NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com ALLOW_INDEXING=true npm run build
+NEXT_PUBLIC_SITE_URL=https://winfintechnologies.com ALLOW_INDEXING=true npm start   # port 3000 (PORT to change)
 ```
 
 The contact form uses a server route (`/api/contact`), so static-only hosting (`next export`) is not supported unless you remove the form and keep the `mailto:` links.
@@ -94,10 +94,10 @@ Each page sets its title, description, canonical and social tags through `pageMe
 ### Checking a deployment
 
 ```bash
-curl -sI https://your-domain/saakshi | grep -i -E "^HTTP|location"     # 308 to /saakshi/
-curl -s https://your-domain/saakshi/ | grep -o '<link rel="canonical"[^>]*>'
-curl -s https://your-domain/robots.txt
-curl -s https://your-domain/sitemap.xml
+curl -sI https://winfintechnologies.com/saakshi | grep -i -E "^HTTP|location"     # 308 to /saakshi/
+curl -s https://winfintechnologies.com/saakshi/ | grep -o '<link rel="canonical"[^>]*>'
+curl -s https://winfintechnologies.com/robots.txt
+curl -s https://winfintechnologies.com/sitemap.xml
 curl -sI https://your-preview-url/ | grep -i x-robots-tag                  # noindex on previews
 ```
 
@@ -107,10 +107,10 @@ Then validate a few URLs in Google's [Rich Results Test](https://search.google.c
 
 These steps need the **website owner's Google account and access to the domain's DNS settings**. They cannot be done from the codebase.
 
-1. Go to [search.google.com/search-console](https://search.google.com/search-console) and choose **Add property → Domain**. Enter the bare domain, for example `winfin.example`. This covers `www`, apex, `http` and `https`.
+1. Go to [search.google.com/search-console](https://search.google.com/search-console) and choose **Add property → Domain**. Enter the bare domain, `winfintechnologies.com`. This covers `www`, apex, `http` and `https`.
 2. Google shows a **TXT record**. Add it in the DNS settings at your domain registrar or DNS host. This needs DNS access.
 3. Back in Search Console, click **Verify**. DNS changes can take from a few minutes to a day to propagate.
-4. Open **Sitemaps** and submit `https://<your production domain>/sitemap.xml`. The status should show "Success" with 7 discovered URLs.
+4. Open **Sitemaps** and submit `https://winfintechnologies.com/sitemap.xml`. The status should show "Success" with 7 discovered URLs.
 5. Use **URL inspection** on `/` and `/saakshi/`, check that the canonical Google selects matches yours, and click **Request indexing**.
 6. Optional: verify the same domain in [Bing Webmaster Tools](https://www.bing.com/webmasters), which can import from Search Console, and submit the sitemap there.
 

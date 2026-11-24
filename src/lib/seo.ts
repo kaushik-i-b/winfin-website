@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { site } from "./site";
 
-/** Absolute URL on the configured production domain. Paths keep their trailing slash. */
+/**
+ * Absolute URL on the configured site URL (which may include a subpath, e.g.
+ * https://kaushik-i-b.github.io/winfin-website). Paths keep their trailing slash.
+ */
 export function absoluteUrl(path = "/") {
-  return new URL(path, `${site.url}/`).toString();
+  return `${site.url}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 type PageMeta = {

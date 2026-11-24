@@ -25,7 +25,8 @@ The site is a fully static export (`output: "export"`). `npm run build` writes i
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Production URL, defaults to `https://winfintechnologies.com`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. |
+| `NEXT_PUBLIC_SITE_URL` | Site URL, including any subpath. Defaults to `https://winfintechnologies.com`. Used for canonical URLs, Open Graph, structured data, `sitemap.xml` and `robots.txt`. |
+| `NEXT_PUBLIC_BASE_PATH` | Subpath when not on its own domain, e.g. `/winfin-website` for github.io. Leave unset on `winfintechnologies.com`. |
 | `ALLOW_INDEXING` | `true` only for the production build (the deploy workflow sets it). Without it every page is `noindex` and `robots.txt` lists no sitemap. |
 | `NEXT_PUBLIC_CONTACT_ENDPOINT` | Optional. A form-service endpoint that accepts a JSON `POST` from the browser and returns 2xx, e.g. a [Formspree](https://formspree.io) form URL. In GitHub, set it as the repository variable `CONTACT_ENDPOINT`. |
 
@@ -38,22 +39,31 @@ The email links on the Contact page (Saakshi pilot, software project, general) a
 
 ## Deploy: GitHub Pages
 
-Every push to `main` runs `.github/workflows/deploy.yml`: lint, static build with production settings, then deploy to GitHub Pages. `public/CNAME` sets the custom domain to `winfintechnologies.com`.
+Every push to `main` runs `.github/workflows/deploy.yml`: lint, static build, then deploy to GitHub Pages. The build reads three **repository variables** (Settings → Secrets and variables → Actions → Variables):
 
-**One-time setup (needs the repository owner, and DNS access for the domain):**
+| Variable | github.io (current) | winfintechnologies.com |
+| --- | --- | --- |
+| `SITE_URL` | `https://kaushik-i-b.github.io/winfin-website` | `https://winfintechnologies.com` (or delete it; this is the default) |
+| `BASE_PATH` | `/winfin-website` | delete it |
+| `ALLOW_INDEXING` | `false` (keeps the temporary address out of search) | `true` (or delete it; this is the default) |
+| `CONTACT_ENDPOINT` | optional form-service URL, e.g. Formspree | same |
 
-1. GitHub → repository **Settings → Pages**: set **Source** to **GitHub Actions**. Pages on a private repository needs a paid GitHub plan; on a free plan the repository must be public.
-2. In the same page, set **Custom domain** to `winfintechnologies.com` and, once DNS works, tick **Enforce HTTPS**.
-3. At your DNS provider for `winfintechnologies.com`:
-   - `A` records for the apex `@`: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - Optional `AAAA` records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`
-   - `CNAME` record: `www` → `kaushik-i-b.github.io`
+**Current address:** https://kaushik-i-b.github.io/winfin-website/
 
-   GitHub then redirects `www` to the apex and issues the HTTPS certificate. This can take up to 24 hours.
-4. Recommended: verify the domain under your GitHub account's **Settings → Pages → Verified domains**, so no one else can claim it on GitHub.
-5. Optional: add the repository variable `CONTACT_ENDPOINT` (**Settings → Secrets and variables → Actions → Variables**) and re-run the workflow to turn on online form delivery.
+### Moving to winfintechnologies.com
 
-GitHub Pages also redirects `/saakshi` to `/saakshi/` and serves `404.html` for unknown URLs. Old URLs `/products/` and `/home/` are static pages that redirect immediately and are `noindex`.
+These steps need the repository owner, and DNS access for the domain.
+
+1. At your DNS provider for `winfintechnologies.com`, replace the existing records with:
+   - `A` records for `@`: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - Optional `AAAA` records for `@`: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`
+   - A `CNAME` record from `www` to `kaushik-i-b.github.io`
+2. Update the repository variables: delete `BASE_PATH`, set `SITE_URL=https://winfintechnologies.com` and `ALLOW_INDEXING=true`.
+3. In **Settings → Pages**, set **Custom domain** to `winfintechnologies.com`. Once the certificate is issued, tick **Enforce HTTPS**.
+4. Re-run the "Deploy to GitHub Pages" workflow from the **Actions** tab. GitHub then redirects github.io and `www` to the apex domain.
+5. Recommended: verify the domain under your GitHub account's **Settings → Pages → Verified domains**.
+
+GitHub Pages redirects `/saakshi` to `/saakshi/` and serves `404.html` for unknown URLs. Old URLs `/products/` and `/home/` are static pages that redirect immediately and are `noindex`.
 
 To preview the static build locally: `npm run build && npx serve out` (or any static file server).
 
@@ -111,7 +121,7 @@ These steps need the **website owner's Google account and access to the domain's
 5. Use **URL inspection** on `/` and `/saakshi/`, check that the canonical Google selects matches yours, and click **Request indexing**.
 6. Optional: verify the same domain in [Bing Webmaster Tools](https://www.bing.com/webmasters), which can import from Search Console, and submit the sitemap there.
 
-Request indexing only after the GitHub Pages deploy is live on `https://winfintechnologies.com`. The workflow sets `ALLOW_INDEXING=true`.
+Do this only after the site is live on `https://winfintechnologies.com` with `ALLOW_INDEXING=true`. The temporary github.io address is deliberately `noindex`.
 
 ## Project structure
 
@@ -129,7 +139,7 @@ src/
     contact/page.tsx         Email routes + contact form
     products/, home/         Redirect pages for old URLs
     sitemap.ts, robots.ts, icon.svg, not-found.tsx
-  public/                    CNAME, .nojekyll, og/ social images, logo.png
+  public/                    .nojekyll, og/ social images, logo.png
   components/
     site-header.tsx          Responsive, keyboard-accessible navigation
     site-footer.tsx

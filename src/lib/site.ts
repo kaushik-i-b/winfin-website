@@ -1,3 +1,6 @@
+/** Subpath the site is served from ("" on its own domain). Mirrors next.config basePath. */
+export const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/+$/, "");
+
 export const site = {
   name: "Winfin Technologies",
   shortName: "Winfin",

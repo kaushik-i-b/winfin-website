@@ -1,26 +1,249 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ------------------------------------------------------------------
+   Winfin design tokens
+   Forest (dark green), Paper (warm white), Lime (muted accent)
+------------------------------------------------------------------- */
+@theme {
+  /* Surfaces */
+  --color-canvas: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-navy: #101827;
+  --color-navy-2: #1a2436;
+  --color-navy-line: #2a3548;
+
+  /* Text */
+  --color-ink: #172033;
+  --color-muted: #526075;
+  --color-subtle: #647085;
+  --color-on-navy: #b8c2d3;
+
+  /* Lines */
+  --color-line: #dfe4ec;
+  --color-line-strong: #c9d1dd;
+
+  /* Accent: cobalt blue (Winfin and Saakshi) */
+  --color-accent: #315efb;
+  --color-accent-hover: #2148d6;
+  --color-accent-soft: #eef2ff;
+  --color-accent-on-navy: #8fa8ff;
+
+  /* Oppuna: lavender */
+  --color-lavender: #6d5bd0;
+  --color-lavender-soft: #f2effd;
+
+  /* Status colours, for the Saakshi interface only */
+  --color-ok: #16794c;
+  --color-ok-soft: #e8f5ee;
+  --color-warn: #a15c07;
+  --color-warn-soft: #fef4e2;
+  --color-risk: #c62f2f;
+  --color-risk-soft: #fdecec;
+
+  /* Text on filled accent / lavender buttons */
+  --color-on-accent: #ffffff;
+  --color-on-lavender: #ffffff;
+  --color-lavender-hover: #5b49bd;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
+:root {
+  color-scheme: light;
+  --header-h: 4.25rem;
+}
+
+/* ------------------------------------------------------------------
+   Dark mode: follows the system setting unless the visitor picks
+   Light or Dark with the header toggle (stored as data-theme on <html>).
+------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-canvas: #0b111d;
+    --color-surface: #121a29;
+    --color-navy: #070b14;
+    --color-navy-2: #141d2e;
+    --color-navy-line: #26324a;
+    --color-ink: #e7ebf3;
+    --color-muted: #a7b1c3;
+    --color-subtle: #8d99ae;
+    --color-on-navy: #b8c2d3;
+    --color-line: #243047;
+    --color-line-strong: #34415c;
+    --color-accent: #7d97ff;
+    --color-accent-hover: #9cb0ff;
+    --color-accent-soft: #1a2548;
+    --color-accent-on-navy: #8fa8ff;
+    --color-lavender: #a99cf7;
+    --color-lavender-soft: #231e45;
+    --color-lavender-hover: #bfb5fa;
+    --color-ok: #4fc48d;
+    --color-ok-soft: #10291f;
+    --color-warn: #edb255;
+    --color-warn-soft: #30260f;
+    --color-risk: #f27a7a;
+    --color-risk-soft: #341a1e;
+    --color-on-accent: #0b111d;
+    --color-on-lavender: #0b111d;
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #0b111d;
+  --color-surface: #121a29;
+  --color-navy: #070b14;
+  --color-navy-2: #141d2e;
+  --color-navy-line: #26324a;
+  --color-ink: #e7ebf3;
+  --color-muted: #a7b1c3;
+  --color-subtle: #8d99ae;
+  --color-on-navy: #b8c2d3;
+  --color-line: #243047;
+  --color-line-strong: #34415c;
+  --color-accent: #7d97ff;
+  --color-accent-hover: #9cb0ff;
+  --color-accent-soft: #1a2548;
+  --color-accent-on-navy: #8fa8ff;
+  --color-lavender: #a99cf7;
+  --color-lavender-soft: #231e45;
+  --color-lavender-hover: #bfb5fa;
+  --color-ok: #4fc48d;
+  --color-ok-soft: #10291f;
+  --color-warn: #edb255;
+  --color-warn-soft: #30260f;
+  --color-risk: #f27a7a;
+  --color-risk-soft: #341a1e;
+  --color-on-accent: #0b111d;
+  --color-on-lavender: #0b111d;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* Visible, consistent keyboard focus */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.on-navy :focus-visible {
+  outline-color: var(--color-accent-on-navy);
+}
+
+/* ------------------------------------------------------------------
+   Motion — only when the user hasn't asked for reduced motion
+------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .breathe {
+    animation: breathe 8s ease-in-out infinite;
+  }
+  .wave-bar {
+    animation: wave 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  .fade-up {
+    animation: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .fade-up-2 {
+    animation: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s both;
+  }
+  .fade-up-3 {
+    animation: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.24s both;
+  }
+
+  /* Scroll-linked reveal (progressive: browsers without support just show content) */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 22%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.82);
+  }
+  45%,
+  55% {
+    transform: scale(1);
+  }
+}
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.6);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
